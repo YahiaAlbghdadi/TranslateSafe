@@ -87,7 +87,6 @@ const App: React.FC = () => {
     try {
       const card = JSON.parse(decodeURIComponent(raw));
       saveFlashcard(card);
-      showNotification('Flashcard saved from Bookmarklet!');
     } catch { /* malformed param — ignore */ }
     window.history.replaceState({}, '', window.location.pathname);
   }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -123,14 +122,26 @@ const App: React.FC = () => {
       if (e.detail) saveFlashcard(e.detail);
     };
 
+    // Reload cards when the user switches back from the bookmarklet tab
+    const handleFocus = () => loadCards(session.user.id);
+
+    // BroadcastChannel: receives saves from the invisible popup (bookmarklet CSP fallback)
+    const bc = new BroadcastChannel('ts-save');
+    bc.onmessage = (e) => {
+      if (e.data?.type === 'save' && e.data?.card) saveFlashcard(e.data.card);
+    };
+
     window.addEventListener('lingua-gemini-update', handleExternalUpdate);
     window.addEventListener('lingua-gemini-config-update', handleConfigUpdate as EventListener);
     window.addEventListener('lingua-gemini-save-flashcard', handleExtensionSave as EventListener);
+    window.addEventListener('focus', handleFocus);
 
     return () => {
+      bc.close();
       window.removeEventListener('lingua-gemini-update', handleExternalUpdate);
       window.removeEventListener('lingua-gemini-config-update', handleConfigUpdate as EventListener);
       window.removeEventListener('lingua-gemini-save-flashcard', handleExtensionSave as EventListener);
+      window.removeEventListener('focus', handleFocus);
     };
   }, [session]);
 

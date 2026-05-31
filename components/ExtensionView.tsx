@@ -49,9 +49,14 @@ const BM_TEMPLATE =
       `.then(function(r){` +
         `sv.style.opacity='1';sv.style.cursor='default';` +
         `if(r.ok||r.status===201){sv.textContent='Saved!';sv.style.background='#10b981';}` +
-        `else{sv.textContent='Session expired — re-open Browser tab';sv.style.background='#ef4444';sv.style.fontSize='11px';}` +
+        `else{sv.textContent='Error '+r.status+' — re-open Browser tab to refresh token';sv.style.background='#ef4444';sv.style.fontSize='10px';}` +
       `})` +
-      `.catch(function(){sv.style.opacity='1';sv.textContent='Network error';sv.style.background='#ef4444';sv.style.cursor='default';});` +
+      `.catch(function(){` +
+      `var d=encodeURIComponent(JSON.stringify({original:sel,translated:t.trim(),targetLang:'__LANG__'}));` +
+      `window.open('__APP_URL__/?ts_save='+d,'ts-save','popup,width=300,height=200,top=100,left=100');` +
+      `sv.style.opacity='1';sv.style.cursor='default';sv.textContent='Saving...';sv.style.background='#6366f1';` +
+      `setTimeout(function(){sv.textContent='Saved!';sv.style.background='#10b981';},2000);` +
+      `});` +
       `};` +
     `b.appendChild(sv);})` +
   `.catch(function(err){b.innerHTML='<span style="color:#f87171">Error: '+err.message+'</span>';});` +
@@ -73,6 +78,7 @@ const ExtensionView: React.FC<Props> = ({ apiKey, targetLang, accessToken, userI
 
   const supabaseUrl     = (import.meta.env.VITE_SUPABASE_URL      as string) || '';
   const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string) || '';
+  const appUrl          = window.location.origin;
 
   const bookmarkletUrl = `javascript:${BM_TEMPLATE
     .replace(/__KEY__/g,      apiKey)
@@ -80,7 +86,8 @@ const ExtensionView: React.FC<Props> = ({ apiKey, targetLang, accessToken, userI
     .replace(/__SUPA_URL__/g, supabaseUrl)
     .replace(/__SUPA_KEY__/g, supabaseAnonKey)
     .replace(/__TOKEN__/g,    accessToken)
-    .replace(/__USER_ID__/g,  userId)}`;
+    .replace(/__USER_ID__/g,  userId)
+    .replace(/__APP_URL__/g,  appUrl)}`;
 
   // React sanitizes javascript: hrefs, so we set it directly on the DOM node
   useEffect(() => {
