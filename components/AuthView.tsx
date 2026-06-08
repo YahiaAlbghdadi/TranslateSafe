@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import type { UserRole } from '../types/database';
-import { ShieldCheck, Loader2, AlertCircle, GraduationCap, BookOpen, School } from 'lucide-react';
+import { ShieldCheck, Loader2, AlertCircle, GraduationCap, BookOpen, School, MailCheck } from 'lucide-react';
 
 const AuthView: React.FC = () => {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -11,12 +11,11 @@ const AuthView: React.FC = () => {
   const [schoolAccount, setSchoolAccount] = useState(false);
   const [role, setRole] = useState<UserRole>('student');
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
 
   const resetForm = () => {
     setError(null);
-    setInfo(null);
     setSchoolAccount(false);
     setRole('student');
     setDisplayName('');
@@ -41,7 +40,7 @@ const AuthView: React.FC = () => {
           options: { data: metadata },
         });
         if (error) throw error;
-        setInfo('Check your email for a confirmation link, then sign in.');
+        setRegisteredEmail(email);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -52,6 +51,44 @@ const AuthView: React.FC = () => {
       setLoading(false);
     }
   };
+
+  if (registeredEmail) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-10 shadow-xl flex flex-col items-center text-center gap-6">
+            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+              <MailCheck className="w-10 h-10 text-emerald-400" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <h2 className="text-xl font-semibold text-slate-100">Check your email</h2>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                We sent a confirmation link to
+              </p>
+              <p className="text-indigo-300 font-medium text-sm">{registeredEmail}</p>
+              <p className="text-slate-400 text-sm leading-relaxed mt-1">
+                Click the link in that email to activate your account, then come back here to sign in.
+              </p>
+            </div>
+            <button
+              onClick={() => { setRegisteredEmail(null); setMode('signin'); resetForm(); }}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/20"
+            >
+              Back to Sign In
+            </button>
+            <p className="text-slate-600 text-xs">
+              Didn't receive it? Check your spam folder.
+            </p>
+          </div>
+        </div>
+
+        <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-900/10 rounded-full blur-3xl opacity-50" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-900/10 rounded-full blur-3xl opacity-50" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
@@ -172,12 +209,6 @@ const AuthView: React.FC = () => {
               <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 {error}
-              </div>
-            )}
-
-            {info && (
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-emerald-400 text-sm">
-                {info}
               </div>
             )}
 
