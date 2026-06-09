@@ -44,11 +44,3 @@ export enum TranslationMode {
 }
 
 export type SrsRating = 'again' | 'hard' | 'good' | 'easy';
-
-declare global {
-  interface Window {
-    electronAPI?: {
-      setMode: (mode: 'mini' | 'normal') => void;
-    };
-  }
-}
