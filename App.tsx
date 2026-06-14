@@ -11,7 +11,7 @@ import HistoryView from './components/HistoryView';
 import AuthView from './components/AuthView';
 import TeacherView from './components/teacher/TeacherView';
 import StudentView from './components/student/StudentView';
-import { Library, Globe2, AlertTriangle, ShieldCheck, Clock, LogOut, School, GraduationCap, Puzzle } from 'lucide-react';
+import { Library, Globe2, AlertTriangle, Clock, LogOut, School, GraduationCap, Puzzle } from 'lucide-react';
 import ExtensionView from './components/ExtensionView';
 
 // Map Supabase snake_case rows → TS camelCase interfaces
@@ -358,7 +358,7 @@ const App: React.FC = () => {
           {!hasApiKey && (
             <div className="bg-red-500/10 border-b border-red-500/20 p-2 text-center text-xs md:text-sm text-red-400 flex items-center justify-center gap-2">
               <AlertTriangle className="w-4 h-4" />
-              <span>API Key missing. Create a <b>.env</b> file with <code>API_KEY=AIza...</code> in the project root.</span>
+              <span>Gemini API key missing. Set <code>API_KEY</code> in a local <b>.env</b> file, or as an environment variable in your hosting provider's project settings, then rebuild/redeploy.</span>
             </div>
           )}
           {notification && (
@@ -368,9 +368,7 @@ const App: React.FC = () => {
           )}
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-lg shadow-lg shadow-indigo-500/20">
-                <ShieldCheck className="w-6 h-6 text-white" />
-              </div>
+              <img src="/icon.svg" alt="TranslateSafe" className="w-10 h-10 rounded-lg shadow-lg shadow-indigo-500/20" />
               <div className="hidden sm:block">
                 <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 leading-none">
                   TranslateSafe
