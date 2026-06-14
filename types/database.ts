@@ -382,6 +382,10 @@ export interface Database {
         Args:    { p_class_id: string };
         Returns: boolean;
       };
+      join_class_by_invite_code: {
+        Args:    { p_invite_code: string };
+        Returns: void;
+      };
     };
   };
 }

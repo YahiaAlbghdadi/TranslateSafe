@@ -42,32 +42,19 @@ const MyClasses: React.FC<Props> = ({ userId }) => {
     setError(null);
     setJoining(true);
 
-    const { data: cls, error: fetchErr } = await supabase
-      .from('classes')
-      .select('id')
-      .eq('invite_code', code)
-      .single();
-
-    if (fetchErr || !cls) {
-      setError('Invalid invite code. Double-check with your teacher.');
-      setJoining(false);
-      return;
-    }
-
-    const alreadyIn = classes.some(c => c.id === cls.id);
-    if (alreadyIn) {
-      setError('You are already in this class.');
-      setJoining(false);
-      return;
-    }
-
-    const { error: insertErr } = await supabase
-      .from('class_memberships')
-      .insert({ class_id: cls.id, student_id: userId });
+    const { error: joinErr } = await supabase.rpc('join_class_by_invite_code', {
+      p_invite_code: code,
+    });
 
     setJoining(false);
-    if (insertErr) {
-      setError('Could not join. Try again.');
+    if (joinErr) {
+      if (joinErr.message.includes('already_member')) {
+        setError('You are already in this class.');
+      } else if (joinErr.message.includes('invalid_invite_code')) {
+        setError('Invalid invite code. Double-check with your teacher.');
+      } else {
+        setError('Could not join. Try again.');
+      }
     } else {
       setInviteCode('');
       load();
