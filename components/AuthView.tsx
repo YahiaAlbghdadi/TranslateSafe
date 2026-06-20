@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import type { UserRole } from '../types/database';
-import { ShieldCheck, Loader2, AlertCircle, GraduationCap, BookOpen, School, MailCheck } from 'lucide-react';
+import { Loader2, AlertCircle, GraduationCap, BookOpen, School, MailCheck } from 'lucide-react';
 
 const AuthView: React.FC = () => {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -95,9 +95,7 @@ const AuthView: React.FC = () => {
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-8 gap-3">
-          <div className="p-3 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl shadow-lg shadow-indigo-500/30">
-            <ShieldCheck className="w-8 h-8 text-white" />
-          </div>
+          <img src="/logo.png" alt="TranslateSafe" className="w-20 h-20 object-contain rounded-2xl shadow-lg shadow-indigo-500/30" />
           <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
             TranslateSafe
           </h1>

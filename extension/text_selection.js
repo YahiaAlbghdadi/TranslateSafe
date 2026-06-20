@@ -144,7 +144,7 @@ function updateBubble(translatedText, originalText, targetLang, isError = false)
       hint.style.fontSize = "11px";
       hint.style.color = "#94a3b8";
       hint.style.marginTop = "8px";
-      hint.innerHTML = "Open <a href='http://localhost:3000' target='_blank' style='color:#818cf8'>LinguaGemini App</a> to sync key.";
+      hint.innerHTML = "Open <a href='https://translate-safe.vercel.app/' target='_blank' style='color:#818cf8'>LinguaGemini App</a> to sync key.";
       currentBubble.appendChild(hint);
   }
 }
