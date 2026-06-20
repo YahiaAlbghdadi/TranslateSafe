@@ -247,8 +247,13 @@ const App: React.FC = () => {
   };
 
   const moveFlashcardToFolder = async (id: string, folder: string | null) => {
+    const previous = flashcards.find(c => c.id === id)?.folder ?? null;
     setFlashcards(prev => prev.map(c => c.id === id ? { ...c, folder } : c));
-    await supabase.from('flashcards').update({ folder }).eq('id', id);
+    const { error } = await supabase.from('flashcards').update({ folder }).eq('id', id);
+    if (error) {
+      setFlashcards(prev => prev.map(c => c.id === id ? { ...c, folder: previous } : c));
+      showNotification('Folder column missing — run in Supabase SQL editor: ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS folder text DEFAULT NULL;');
+    }
   };
 
   const rateFlashcard = async (id: string, rating: SrsRating) => {
@@ -374,7 +379,7 @@ const App: React.FC = () => {
           )}
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="TranslateSafe" className="w-10 h-10 rounded-lg object-contain shadow-lg shadow-indigo-500/20" />
+              <img src="/logo.png" alt="TranslateSafe" className="w-10 h-10 object-contain" />
               <div className="hidden sm:block">
                 <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 leading-none">
                   TranslateSafe

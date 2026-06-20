@@ -95,7 +95,7 @@ const AuthView: React.FC = () => {
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-8 gap-3">
-          <img src="/logo.png" alt="TranslateSafe" className="w-20 h-20 object-contain rounded-2xl shadow-lg shadow-indigo-500/30" />
+          <img src="/logo.png" alt="TranslateSafe" className="w-20 h-20 object-contain" />
           <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
             TranslateSafe
           </h1>
