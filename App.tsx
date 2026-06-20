@@ -23,6 +23,7 @@ const toFlashcard = (row: any): Flashcard => ({
   targetLang: row.target_lang,
   timestamp: row.timestamp,
   folder: row.folder ?? null,
+  setName: row.set_name ?? null,
   easiness: row.easiness ?? 2.5,
   interval: row.interval ?? 0,
   repetitions: row.repetitions ?? 0,
@@ -246,13 +247,13 @@ const App: React.FC = () => {
     await supabase.from('flashcards').delete().eq('id', id);
   };
 
-  const moveFlashcardToFolder = async (id: string, folder: string | null) => {
-    const previous = flashcards.find(c => c.id === id)?.folder ?? null;
-    setFlashcards(prev => prev.map(c => c.id === id ? { ...c, folder } : c));
-    const { error } = await supabase.from('flashcards').update({ folder }).eq('id', id);
+  const assignFlashcard = async (id: string, folder: string | null, setName: string | null) => {
+    const prev = flashcards.find(c => c.id === id);
+    setFlashcards(cards => cards.map(c => c.id === id ? { ...c, folder, setName } : c));
+    const { error } = await supabase.from('flashcards').update({ folder, set_name: setName }).eq('id', id);
     if (error) {
-      setFlashcards(prev => prev.map(c => c.id === id ? { ...c, folder: previous } : c));
-      showNotification('Folder column missing — run in Supabase SQL editor: ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS folder text DEFAULT NULL;');
+      setFlashcards(cards => cards.map(c => c.id === id ? { ...c, folder: prev?.folder ?? null, setName: prev?.setName ?? null } : c));
+      showNotification('Column missing — run in Supabase SQL editor: ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS folder text DEFAULT NULL; ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS set_name text DEFAULT NULL;');
     }
   };
 
@@ -436,7 +437,7 @@ const App: React.FC = () => {
               flashcards={flashcards}
               onDeleteFlashcard={deleteFlashcard}
               onRateFlashcard={rateFlashcard}
-              onMoveToFolder={moveFlashcardToFolder}
+              onAssignCard={assignFlashcard}
             />
           )}
           {activeTab === AppTab.HISTORY && (

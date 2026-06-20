@@ -39,6 +39,7 @@ export interface Database {
           repetitions: number;
           next_review: number;
           folder:      string | null;
+          set_name:    string | null;
         };
         Insert: {
           id:           string;
@@ -53,6 +54,7 @@ export interface Database {
           repetitions?: number;
           next_review?: number;
           folder?:      string | null;
+          set_name?:    string | null;
         };
         Update: {
           id?:          string;
@@ -67,6 +69,7 @@ export interface Database {
           repetitions?: number;
           next_review?: number;
           folder?:      string | null;
+          set_name?:    string | null;
         };
         Relationships: [];
       };

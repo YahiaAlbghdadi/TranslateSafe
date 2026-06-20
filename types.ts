@@ -16,6 +16,7 @@ export interface Flashcard {
   targetLang: string;
   timestamp: number;
   folder?: string | null;
+  setName?: string | null;
   // SM-2 spaced repetition fields
   easiness: number;
   interval: number;
