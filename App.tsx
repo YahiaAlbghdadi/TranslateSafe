@@ -60,7 +60,10 @@ const App: React.FC = () => {
       setAuthLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // USER_UPDATED fires when we call supabase.auth.updateUser() (e.g. persisting targetLang).
+      // Ignoring it prevents the session useEffect from re-running and resetting the active tab.
+      if (event === 'USER_UPDATED') return;
       setSession(session);
     });
 
