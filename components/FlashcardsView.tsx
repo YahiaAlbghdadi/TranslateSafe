@@ -15,6 +15,8 @@ interface FlashcardsViewProps {
 
 const ALL_LABEL = 'All';
 const ALL_LANGUAGES = [ALL_LABEL, ...LANGUAGE_CONFIG.map(l => l.name)];
+const LS_FOLDERS = 'ts_user_folders';
+const LS_SETS    = 'ts_user_sets';
 
 const RATING_BUTTONS: { rating: SrsRating; label: string; style: string }[] = [
   { rating: 'again', label: 'Again', style: 'bg-red-600/20 text-red-400 border border-red-600/30 hover:bg-red-600/30' },
@@ -24,6 +26,10 @@ const RATING_BUTTONS: { rating: SrsRating; label: string; style: string }[] = [
 ];
 
 const faceStyle: React.CSSProperties = { WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden' };
+
+function loadLS<T>(key: string, fallback: T): T {
+  try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback; } catch { return fallback; }
+}
 
 const FlashcardsView: React.FC<FlashcardsViewProps> = ({
   flashcards, onDeleteFlashcard, onRateFlashcard, onAssignCard,
@@ -43,6 +49,10 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
   const [newSetInFolder, setNewSetInFolder]     = useState('');
   const [newSetInFolderName, setNewSetInFolderName] = useState('');
 
+  // Folder/set names persist independently of which cards are in them
+  const [userFolders, setUserFolders] = useState<string[]>(() => loadLS<string[]>(LS_FOLDERS, []));
+  const [userSets, setUserSets]       = useState<Record<string, string[]>>(() => loadLS<Record<string, string[]>>(LS_SETS, {}));
+
   const newFolderRef = useRef<HTMLInputElement>(null);
   const menuRef      = useRef<HTMLDivElement>(null);
 
@@ -55,14 +65,16 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
     return () => document.removeEventListener('mousedown', close);
   }, [showFolderMenu]);
 
+  // Merge localStorage folders with any folder names on cards (union, sorted)
   const folders = useMemo(() => {
-    const s = new Set<string>();
-    flashcards.forEach(c => { if (c.folder) s.add(c.folder); });
-    return [...s].sort();
-  }, [flashcards]);
+    const all = new Set([...userFolders, ...flashcards.flatMap(c => c.folder ? [c.folder] : [])]);
+    return [...all].sort();
+  }, [flashcards, userFolders]);
 
+  // Merge localStorage sets with card-derived sets per folder
   const setsByFolder = useMemo(() => {
     const result: Record<string, string[]> = {};
+    Object.entries(userSets).forEach(([f, ss]) => { result[f] = [...ss]; });
     flashcards.forEach(c => {
       if (c.folder && c.setName) {
         if (!result[c.folder]) result[c.folder] = [];
@@ -71,7 +83,7 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
     });
     Object.values(result).forEach(arr => arr.sort());
     return result;
-  }, [flashcards]);
+  }, [flashcards, userSets]);
 
   const currentSets = activeFolder ? (setsByFolder[activeFolder] ?? []) : [];
 
@@ -119,32 +131,55 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
     a.click(); URL.revokeObjectURL(url);
   };
 
+  // Persist a folder name to localStorage
+  const saveFolder = (name: string) => {
+    const updated = [...new Set([...userFolders, name])].sort();
+    setUserFolders(updated);
+    localStorage.setItem(LS_FOLDERS, JSON.stringify(updated));
+  };
+
+  // Persist a set name under a folder to localStorage
+  const saveSet = (folder: string, setName: string) => {
+    const existing = userSets[folder] ?? [];
+    const updated = { ...userSets, [folder]: [...new Set([...existing, setName])].sort() };
+    setUserSets(updated);
+    localStorage.setItem(LS_SETS, JSON.stringify(updated));
+  };
+
+  // Assign current card (from dropdown) — also persists the folder/set names
   const handleAssign = (folder: string | null, setName: string | null) => {
     if (!currentCard) return;
+    if (folder) saveFolder(folder);
+    if (folder && setName) saveSet(folder, setName);
     onAssignCard(currentCard.id, folder, setName);
     setShowFolderMenu(false);
     setNewSetInFolder(''); setNewSetInFolderName('');
   };
 
+  // Tab bar: create folder without touching any card
   const handleCreateFolder = () => {
     const name = newFolderName.trim();
-    if (!name || !currentCard) return;
-    onAssignCard(currentCard.id, name, null);
+    if (!name) return;
+    saveFolder(name);
     setActiveFolder(name); setActiveSet(null);
     setNewFolderName(''); setShowNewFolderTab(false);
   };
 
+  // Tab bar: create set without touching any card
   const handleCreateSet = () => {
     const name = newSetName.trim();
-    if (!name || !activeFolder || !currentCard) return;
-    onAssignCard(currentCard.id, activeFolder, name);
+    if (!name || !activeFolder) return;
+    saveSet(activeFolder, name);
     setActiveSet(name);
     setNewSetName(''); setShowNewSetTab(false);
   };
 
+  // Dropdown: create set AND assign current card
   const handleCreateSetInFolder = (folder: string) => {
     const name = newSetInFolderName.trim();
     if (!name || !currentCard) return;
+    saveFolder(folder);
+    saveSet(folder, name);
     onAssignCard(currentCard.id, folder, name);
     setNewSetInFolder(''); setNewSetInFolderName(''); setShowFolderMenu(false);
   };
@@ -300,7 +335,6 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
 
               {showFolderMenu && (
                 <div className="absolute right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-20 w-60 py-1 max-h-80 overflow-y-auto">
-                  {/* No folder */}
                   <button onClick={() => handleAssign(null, null)}
                     className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-700 transition-colors flex items-center gap-2 ${!currentCard.folder ? 'text-indigo-400' : 'text-slate-400'}`}
                   >
@@ -311,24 +345,19 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
 
                   {folders.map(folder => (
                     <div key={folder}>
-                      {/* Folder row — assigns to folder, no set */}
                       <button onClick={() => handleAssign(folder, null)}
                         className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-700 transition-colors flex items-center gap-2 font-medium ${currentCard.folder === folder && !currentCard.setName ? 'text-indigo-400' : 'text-slate-200'}`}
                       >
                         <Folder className="w-3.5 h-3.5 shrink-0" /> {folder}
                       </button>
-
-                      {/* Set rows within folder */}
                       {(setsByFolder[folder] ?? []).map(setName => (
                         <button key={setName} onClick={() => handleAssign(folder, setName)}
                           className={`w-full text-left pl-8 pr-3 py-1.5 text-xs hover:bg-slate-700 transition-colors flex items-center gap-2 ${currentCard.folder === folder && currentCard.setName === setName ? 'text-indigo-400' : 'text-slate-400'}`}
                         >
                           <Layers className="w-3 h-3 shrink-0" /> {setName}
-                          {currentCard.folder === folder && currentCard.setName === setName && <span className="ml-auto text-indigo-400">✓</span>}
+                          {currentCard.folder === folder && currentCard.setName === setName && <span className="ml-auto">✓</span>}
                         </button>
                       ))}
-
-                      {/* New set within this folder */}
                       {newSetInFolder === folder ? (
                         <div className="flex items-center gap-1.5 pl-8 pr-3 py-1.5">
                           <input autoFocus value={newSetInFolderName} onChange={e => setNewSetInFolderName(e.target.value)}
@@ -391,7 +420,6 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
                 )}
                 <p className="mt-4 text-slate-500 text-sm">Click to flip</p>
               </div>
-
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 to-slate-800 rounded-2xl shadow-xl border border-indigo-500/30 flex flex-col items-center justify-center p-8 text-center [transform:rotateY(180deg)]" style={faceStyle}>
                 <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-4 bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-500/20">{currentCard.targetLang}</span>
                 <p className="text-3xl md:text-4xl font-bold text-white leading-tight">{currentCard.translated}</p>
