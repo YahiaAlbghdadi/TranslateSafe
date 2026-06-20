@@ -11,6 +11,8 @@ interface FlashcardsViewProps {
   onDeleteFlashcard: (id: string) => void;
   onRateFlashcard: (id: string, rating: SrsRating) => void;
   onAssignCard: (id: string, folder: string | null, setName: string | null) => void;
+  onClearFolder: (folder: string) => void;
+  onClearSet: (folder: string, setName: string) => void;
 }
 
 const ALL_LABEL = 'All';
@@ -32,7 +34,7 @@ function loadLS<T>(key: string, fallback: T): T {
 }
 
 const FlashcardsView: React.FC<FlashcardsViewProps> = ({
-  flashcards, onDeleteFlashcard, onRateFlashcard, onAssignCard,
+  flashcards, onDeleteFlashcard, onRateFlashcard, onAssignCard, onClearFolder, onClearSet,
 }) => {
   const [currentIndex, setCurrentIndex]         = useState(0);
   const [isFlipped, setIsFlipped]               = useState(false);
@@ -184,6 +186,25 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
     setNewSetInFolder(''); setNewSetInFolderName(''); setShowFolderMenu(false);
   };
 
+  const handleDeleteFolder = (folder: string) => {
+    const updatedFolders = userFolders.filter(f => f !== folder);
+    setUserFolders(updatedFolders);
+    localStorage.setItem(LS_FOLDERS, JSON.stringify(updatedFolders));
+    const { [folder]: _removed, ...restSets } = userSets;
+    setUserSets(restSets);
+    localStorage.setItem(LS_SETS, JSON.stringify(restSets));
+    if (activeFolder === folder) { setActiveFolder(null); setActiveSet(null); resetIndex(); }
+    onClearFolder(folder);
+  };
+
+  const handleDeleteSet = (folder: string, setName: string) => {
+    const updatedSets = { ...userSets, [folder]: (userSets[folder] ?? []).filter(s => s !== setName) };
+    setUserSets(updatedSets);
+    localStorage.setItem(LS_SETS, JSON.stringify(updatedSets));
+    if (activeSet === setName) { setActiveSet(null); resetIndex(); }
+    onClearSet(folder, setName);
+  };
+
   const cardLabel = currentCard
     ? currentCard.folder
       ? currentCard.setName ? `${currentCard.folder} / ${currentCard.setName}` : currentCard.folder
@@ -219,15 +240,21 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
         </button>
 
         {folders.map(folder => (
-          <button key={folder} onClick={() => { setActiveFolder(folder); setActiveSet(null); resetIndex(); }}
-            className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              activeFolder === folder ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700'
-            }`}
+          <div key={folder} className={`shrink-0 group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
+            activeFolder === folder ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700'
+          }`}
+            onClick={() => { setActiveFolder(folder); setActiveSet(null); resetIndex(); }}
           >
-            <Folder className="w-3.5 h-3.5" />
+            <Folder className="w-3.5 h-3.5 shrink-0" />
             {folder}
             <span className="opacity-60">({flashcards.filter(c => c.folder === folder).length})</span>
-          </button>
+            <span
+              onClick={e => { e.stopPropagation(); handleDeleteFolder(folder); }}
+              className="ml-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-400 cursor-pointer"
+            >
+              <X className="w-3 h-3" />
+            </span>
+          </div>
         ))}
 
         {showNewFolderTab ? (
@@ -263,15 +290,22 @@ const FlashcardsView: React.FC<FlashcardsViewProps> = ({
           </button>
 
           {currentSets.map(setName => (
-            <button key={setName} onClick={() => { setActiveSet(setName); resetIndex(); }}
-              className={`shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+            <div key={setName}
+              className={`shrink-0 group flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
                 activeSet === setName ? 'bg-slate-600 text-white' : 'bg-slate-800/60 text-slate-500 hover:text-slate-300 border border-slate-700'
               }`}
+              onClick={() => { setActiveSet(setName); resetIndex(); }}
             >
-              <Layers className="w-3 h-3" />
+              <Layers className="w-3 h-3 shrink-0" />
               {setName}
               <span className="opacity-60">({flashcards.filter(c => c.folder === activeFolder && c.setName === setName).length})</span>
-            </button>
+              <span
+                onClick={e => { e.stopPropagation(); handleDeleteSet(activeFolder!, setName); }}
+                className="ml-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-400 cursor-pointer"
+              >
+                <X className="w-3 h-3" />
+              </span>
+            </div>
           ))}
 
           {showNewSetTab ? (

@@ -257,6 +257,16 @@ const App: React.FC = () => {
     }
   };
 
+  const clearFolder = async (folder: string) => {
+    setFlashcards(cards => cards.map(c => c.folder === folder ? { ...c, folder: null, setName: null } : c));
+    await supabase.from('flashcards').update({ folder: null, set_name: null }).eq('folder', folder);
+  };
+
+  const clearSet = async (folder: string, setName: string) => {
+    setFlashcards(cards => cards.map(c => c.folder === folder && c.setName === setName ? { ...c, setName: null } : c));
+    await supabase.from('flashcards').update({ set_name: null }).eq('folder', folder).eq('set_name', setName);
+  };
+
   const rateFlashcard = async (id: string, rating: SrsRating) => {
     const card = flashcards.find(c => c.id === id);
     if (!card) return;
@@ -438,6 +448,8 @@ const App: React.FC = () => {
               onDeleteFlashcard={deleteFlashcard}
               onRateFlashcard={rateFlashcard}
               onAssignCard={assignFlashcard}
+              onClearFolder={clearFolder}
+              onClearSet={clearSet}
             />
           )}
           {activeTab === AppTab.HISTORY && (
