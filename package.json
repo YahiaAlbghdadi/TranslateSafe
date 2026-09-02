@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "zip:extension": "powershell -Command \"Compress-Archive -Path extension/* -DestinationPath public/extension.zip -Force\""
   },
   "dependencies": {
     "@google/genai": "^1.35.0",

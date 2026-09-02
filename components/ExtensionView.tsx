@@ -240,17 +240,24 @@ const ExtensionView: React.FC<Props> = ({ apiKey, targetLang, accessToken, userI
                 Step 1 — Locate files
               </h3>
               <p className="text-slate-400 text-sm mb-4">
-                The extension source is included in your project under the
-                <code className="bg-slate-900 px-1.5 py-0.5 rounded mx-1 text-indigo-300 font-mono text-xs">/extension</code>
-                directory. Use <code className="bg-slate-900 px-1.5 py-0.5 rounded text-indigo-300 font-mono text-xs">manifest.json</code>.
+                Download the extension source below, unzip it, then use
+                <code className="bg-slate-900 px-1.5 py-0.5 rounded mx-1 text-indigo-300 font-mono text-xs">manifest.json</code>.
               </p>
-              <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-xs text-slate-500">
+              <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-xs text-slate-500 mb-4">
                 extension/<br />
                 ├── <span className="text-yellow-400">manifest.json</span><br />
                 ├── popup.html<br />
                 ├── background.js<br />
                 └── text_selection.js
               </div>
+              <a
+                href="/extension.zip"
+                download="translatesafe-extension.zip"
+                className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2.5 rounded-lg text-sm transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Download Extension (.zip)
+              </a>
             </div>
 
             <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
@@ -297,15 +304,23 @@ const ExtensionView: React.FC<Props> = ({ apiKey, targetLang, accessToken, userI
                 Step 1 — Locate files
               </h3>
               <p className="text-slate-400 text-sm mb-4">
-                Use the Firefox-specific manifest included in the project.
+                Download the extension source below, unzip it, then use the Firefox-specific manifest.
               </p>
-              <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-xs text-slate-500">
+              <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-xs text-slate-500 mb-4">
                 extension/<br />
                 ├── <span className="text-yellow-400">manifest.firefox.json</span><br />
                 ├── <span className="text-emerald-400">browser-polyfill.js</span><br />
                 ├── background.js<br />
                 └── text_selection.js
               </div>
+              <a
+                href="/extension.zip"
+                download="translatesafe-extension.zip"
+                className="flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white font-medium px-4 py-2.5 rounded-lg text-sm transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Download Extension (.zip)
+              </a>
             </div>
 
             <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
